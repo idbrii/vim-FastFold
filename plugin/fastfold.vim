@@ -79,10 +79,9 @@ function! s:WinDo( command )
   if exists('*getcmdwintype') && !empty(getcmdwintype())
     return
   endif
-  " Work around Vim bug.
-  " See https://groups.google.com/forum/#!topic/vim_dev/LLTw8JV6wKg
-  let curaltwin = winnr('#') ? winnr('#') : 1
-  let currwin=winnr()
+  " If there is no #, returns 0 and win_gotoid will silently fail as desired.
+  let curaltwin = win_getid(winnr('#'))
+  let currwin = win_getid(winnr())
   if &scrollopt =~# '\<jump\>'
     set scrollopt-=jump
     let l:restore = 'set scrollopt+=jump'
@@ -92,8 +91,8 @@ function! s:WinDo( command )
   let l:currwinwidth = &winwidth
   let &winwidth = &winminwidth > 0 ? &winminwidth : 1
   silent! execute 'keepjumps noautocmd windo ' . a:command
-  silent! execute 'noautocmd ' . curaltwin . 'wincmd w'
-  silent! execute 'noautocmd ' . currwin . 'wincmd w'
+  silent! noautocmd call win_gotoid(curaltwin)
+  silent! noautocmd call win_gotoid(currwin)
   if exists('l:restore')
     exe l:restore
   endif
